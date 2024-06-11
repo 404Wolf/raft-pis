@@ -42,7 +42,9 @@ class NodeLog:
     Each node has its own NodeLog.
     """
 
-    def __init__(self, max_items: int, initial_state: NodeState, first_term: int = 0) -> None:
+    def __init__(
+        self, max_items: int, initial_state: NodeState, first_term: int = 0
+    ) -> None:
         """
         Initialize the log with a cap on the number of items.
         """
