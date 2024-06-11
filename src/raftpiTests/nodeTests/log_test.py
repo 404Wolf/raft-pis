@@ -16,19 +16,19 @@ class LogTest(unittest.TestCase):
 
     def test_append(self):
         log = NodeLog(10, NodeState.FOLLOWER)
-        self.assertEqual(log.current_log_entry().state, NodeState.FOLLOWER)
-        self.assertEqual(log.current_log_entry().data, None)
-        self.assertEqual(log.current_log_entry().term.number, 0)
+        self.assertEqual(log.get().state, NodeState.FOLLOWER)
+        self.assertEqual(log.get().data, None)
+        self.assertEqual(log.get().term.number, 0)
 
         log.append("test", NodeState.CANDIDATE)
-        self.assertEqual(log.current_log_entry().state, NodeState.CANDIDATE)
-        self.assertEqual(log.current_log_entry().data, "test")
-        self.assertEqual(log.current_log_entry().term.number, 1)
+        self.assertEqual(log.get().state, NodeState.CANDIDATE)
+        self.assertEqual(log.get().data, "test")
+        self.assertEqual(log.get().term.number, 1)
         
         log.append(1234, NodeState.LEADER)
-        self.assertEqual(log.current_log_entry().state, NodeState.LEADER)
-        self.assertEqual(log.current_log_entry().data, 1234)
-        self.assertEqual(log.current_log_entry().term.number, 2)
+        self.assertEqual(log.get().state, NodeState.LEADER)
+        self.assertEqual(log.get().data, 1234)
+        self.assertEqual(log.get().term.number, 2)
 
         print(log._log[1].state)
         self.assertEqual(log._log[1].state, NodeState.CANDIDATE)

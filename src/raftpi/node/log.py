@@ -49,15 +49,11 @@ class NodeLog:
         self.max_items = max_items
         self._log = [NodeLogEntry(None, Term(first_term), initial_state)]
 
-    def current_log_entry(self) -> NodeLogEntry:
-        """Get the current term."""
-        return self._log[-1]
-
     def append(self, data: object, state: NodeState) -> None:
         """
         Append a value to the log. Timestamp is automatically assigned.
         """
-        self._log.append(NodeLogEntry(data, self.current_log_entry().term.next_term(), state))
+        self._log.append(NodeLogEntry(data, self.get().term.next_term(), state))
 
     def get(self) -> NodeLogEntry:
         """
