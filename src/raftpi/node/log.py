@@ -1,20 +1,32 @@
 from time import time
 from dataclasses import dataclass
+from dataclasses import field
 from .node import NodeState
 from queue import Queue
 
 
+@dataclass(frozen=True)
 class Term:
-    lastTerm = 0
+    """
+    A term in the Raft.
 
-    def __init__(self) -> None:
-        self.lastTerm = Term.lastTerm
-        self.timeStamp = time()
-        Term.lastTerm += 1
+    Attributes:
+        number (int): The term number.
+        timeStamp (int): The time the term was created.
+    """
+
+    number: int = 0
+    timeStamp: int = field(default_factory=lambda: int(time()))
+
+    def next_term(self) -> "Term":
+        """
+        Get the next term.
+        """
+        return Term(self.number + 1)
 
 
 @dataclass
-class NodeData:
+class NodeLogEntry:
     """
     Data for a Raft node.
     """
@@ -30,27 +42,25 @@ class NodeLog:
     Each node has its own NodeLog.
     """
 
-    def __init__(self, max_items: int) -> None:
+    def __init__(self, max_items: int, initial_state: NodeState, first_term: int = 0) -> None:
         """
         Initialize the log with a cap on the number of items.
         """
         self.max_items = max_items
-        self.log = []
+        self._log = [NodeLogEntry(None, Term(first_term), initial_state)]
 
-    def current_term(self) -> Term:
+    def current_log_entry(self) -> NodeLogEntry:
         """Get the current term."""
-        if len(self.log) == 0:
-            return Term()
-        return self.log[-1]
+        return self._log[-1]
 
-    def append(self, data, state) -> None:
+    def append(self, data: object, state: NodeState) -> None:
         """
         Append a value to the log. Timestamp is automatically assigned.
         """
-        self.log.append(NodeData(data, Term(), state))
+        self._log.append(NodeLogEntry(data, self.current_log_entry().term.next_term(), state))
 
-    def get(self) -> NodeData:
+    def get(self) -> NodeLogEntry:
         """
         Get the most recent entry.
         """
-        return self.log[-1]
+        return self._log[-1]
