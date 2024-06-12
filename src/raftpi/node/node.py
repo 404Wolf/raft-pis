@@ -12,6 +12,7 @@ from typing import Coroutine
 from fastapi import FastAPI
 import logging
 import uvicorn
+from threading import Thread
 
 app = FastAPI()
 
@@ -92,7 +93,8 @@ class Node:
             raise Node.WrongStateException("Node is not a leader")
 
     @app.route("/append", methods=["POST"])
-    async def _receive_append(self, request: Request): ...
+    async def _receive_append(self, request: Request):
+        pass
 
     async def _send_append(self):
         """Send an append to the requesting node."""
@@ -110,4 +112,4 @@ class Node:
         return IP
 
 
-uvicorn.run(app, host="localhost", port=8000)
+Thread(target=lambda: uvicorn.run(app, host="localhost", port=8000)).start()

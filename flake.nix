@@ -15,19 +15,21 @@
       let
         name = "raftpi";
         pkgs = import nixpkgs { inherit system; };
-        inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; })
-          mkPoetryApplication;
+        poetry = (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; });
       in {
         packages = {
           default = self.packages.${system}.${name};
-          ${name} = mkPoetryApplication { projectDir = self; };
+          ${name} = poetry.mkPoetryApplication {
+            projectDir = self;
+            preferWheels = true;
+          };
         };
 
         devShells = {
           default =
             pkgs.mkShell { inputsFrom = [ self.packages.${system}.${name} ]; };
           poetry = pkgs.mkShell {
-            packages = [ pkgs.python313 pkgs.poetry ];
+            packages = [ pkgs.python312 pkgs.poetry ];
             shellHook = "poetry install ";
           };
         };

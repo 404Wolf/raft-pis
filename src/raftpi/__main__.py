@@ -1,4 +1,5 @@
 import click
+import uvicorn
 import logging
 from raftpi.node.node import Node
 import socket
