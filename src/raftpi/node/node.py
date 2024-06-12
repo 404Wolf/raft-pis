@@ -59,11 +59,13 @@ class Node:
             await asyncio.sleep(3)
             _LOGGER.debug("Node action completed")
 
-    async def _post_neighbors(self, endpoint: str):
+    async def _post_neighbors(self, endpoint: str, data: dict = {}):
         """Send a request to all neighbors."""
         async with aiohttp.ClientSession() as session:
             for neighbor in self.neighbors:
-                async with session.post(f"http://{neighbor}/{endpoint}") as response:
+                async with session.post(
+                    f"http://{neighbor}/{endpoint}", json=data
+                ) as response:
                     response = await response.json()
                     _LOGGER.debug(response)
 
@@ -72,10 +74,10 @@ class Node:
         """Receive a vote from a requesting node."""
         pass
 
-    async def _send_vote(self):
+    async def _send_vote(self, vote: bool):
         """Send a vote to the requesting node."""
         if self.state == NodeState.FOLLOWER:
-            await self._post_neighbors("vote")
+            await self._post_neighbors("vote", {"vote": vote})
         else:
             raise Node.WrongStateException("Node is not a follower")
 
