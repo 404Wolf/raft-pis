@@ -2,14 +2,12 @@ from uuid import uuid4
 from queue import Queue
 import socket
 from enum import Enum
-
+from .timer import NodeTimers
 
 class NodeState(Enum):
     FOLLOWER = 1
     CANDIDATE = 2
     LEADER = 3
-
-
 
 class Node:
     """
