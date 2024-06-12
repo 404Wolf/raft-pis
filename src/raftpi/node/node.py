@@ -53,7 +53,7 @@ class Node:
 
         if self._start_task is None:
             # start the heartbeat timer and push the heartbeat timeout to the actions queue
-            if self.state == NodeState.FOLLOWER and self.timers.heartbeat_timer is None:
+            if self.state == NodeState.FOLLOWER:
                 self.timers.start_heartbeat_timer()
                 self.add_action(receive_heartbeat_timeout())
                 pass
