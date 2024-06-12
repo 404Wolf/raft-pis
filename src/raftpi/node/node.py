@@ -1,4 +1,3 @@
-from uuid import uuid4
 from queue import Queue
 from fastapi import Request
 import contextlib
@@ -50,6 +49,7 @@ class Node:
         while True:
             await (await self.actionQueue.get())(self)
             await asyncio.sleep(3)
+            _LOGGER.debug("Node action completed")
 
     @app.route("/vote")
     async def _receive_vote(self, request: Request): ...
