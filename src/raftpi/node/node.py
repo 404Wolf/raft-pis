@@ -13,7 +13,7 @@ from fastapi import FastAPI
 import logging
 import uvicorn
 from threading import Thread
-from actions import receive_heartbeat_timeout
+from actions import receive_heartbeat_timeout, receive_candidate_timeout
 
 app = FastAPI()
 
@@ -45,17 +45,15 @@ class Node:
         self.state = state
         self.neighbors = neighbors
         self.actionQueue = Queue()
-        self.timers = NodeTimers()
+        self.timers = NodeTimers(5, 5, receive_candidate_timeout, receive_heartbeat_timeout)
         self._start_task = None
 
     async def start(self):
         """Start the node processes."""
-
         if self._start_task is None:
             # start the heartbeat timer and push the heartbeat timeout to the actions queue
             if self.state == NodeState.FOLLOWER:
                 self.timers.start_heartbeat_timer()
-                self.add_action(receive_heartbeat_timeout())
                 pass
 
             self._start_task = asyncio.create_task(self._begin_actions())

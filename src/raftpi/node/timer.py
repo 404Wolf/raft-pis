@@ -1,14 +1,24 @@
 import asyncio
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class NodeTimer:
-    def __init__(self, duration: int):
+    def __init__(self, duration: int, callback: asyncio.coroutine = None):
         self.duration = duration
+        if callback:
+            self._callback = callback
         self._task = None
 
     async def _run(self):
         await asyncio.sleep(self.duration / 1000)
-        print("Timer expired")
+        if self._callback:
+            await self._callback()
+            _LOGGER.debug("Ran the callback")
+        else:
+            _LOGGER.debug("No callback provided")
+        _LOGGER.debug("Timer expired")
 
     async def start(self):
         """
@@ -40,9 +50,9 @@ class NodeTimers:
         heartbeat_timer (int): Time in milliseconds for the heartbeat timer.
     """
 
-    def __init__(self, election_timer: int = 0, heartbeat_timer: int = 0):
-        self.election_timer = NodeTimer(election_timer)
-        self.heartbeat_timer = NodeTimer(heartbeat_timer)
+    def __init__(self, election_timer: int = 0, heartbeat_timer: int = 0, election_callback: asyncio.coroutine = None, heartbeat_callback: asyncio.coroutine = None):
+        self.election_timer = NodeTimer(election_timer, election_callback)
+        self.heartbeat_timer = NodeTimer(heartbeat_timer, heartbeat_callback)
 
     async def reset_election_timer(self):
         await self.election_timer.reset()
