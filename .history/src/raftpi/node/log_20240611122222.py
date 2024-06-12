@@ -1,2 +1,0 @@
-class NodeLog(dict):
-    pass

@@ -1,3 +1,0 @@
-class NodeLog(dict):
-
-    

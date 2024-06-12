@@ -24,12 +24,11 @@
         };
 
         devShells = {
-          default = pkgs.mkShell { 
-            inputsFrom = [ self.packages.${system}.${name} ]; 
-          };
-          poetry = pkgs.mkShell { 
-            packages = [ pkgs.python313 pkgs.poetry ]; 
-            shellHook = '' poetry install '';
+          default =
+            pkgs.mkShell { inputsFrom = [ self.packages.${system}.${name} ]; };
+          poetry = pkgs.mkShell {
+            packages = [ pkgs.python313 pkgs.poetry ];
+            shellHook = "poetry install ";
           };
         };
       });
