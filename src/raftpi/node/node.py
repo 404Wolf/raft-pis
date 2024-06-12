@@ -53,8 +53,11 @@ class Node:
 
         if self._start_task is None:
             # start the heartbeat timer and push the heartbeat timeout to the actions queue
-            self.timers.start_heartbeat_timer()
-            self.add_action(receive_heartbeat_timeout())
+            if self.state == NodeState.FOLLOWER and self.timers.heartbeat_timer is None:
+                self.timers.start_heartbeat_timer()
+                self.add_action(receive_heartbeat_timeout())
+                pass
+
             self._start_task = asyncio.create_task(self._begin_actions())
 
     async def _begin_actions(self):
