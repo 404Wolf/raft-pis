@@ -1,3 +1,4 @@
+import aiohttp
 from queue import Queue
 from fastapi import Request
 import contextlib
@@ -51,21 +52,31 @@ class Node:
             await asyncio.sleep(3)
             _LOGGER.debug("Node action completed")
 
-    @app.route("/vote")
-    async def _receive_vote(self, request: Request): ...
+    async def _post_neighbors(self, endpoint: str):
+        """Send a request to all neighbors."""
+        async with aiohttp.ClientSession():
+            for neighbor in self.neighbors:
+                async with session.post(f"http://{neighbor}/{endpoint}") as response:
+                    response = await response.json()
+                    _LOGGER.debug(response)
+
+    @app.route("/vote", methods=["POST"])
+    async def _receive_vote(self, request: Request): 
+        """Receive a vote from a requesting node."""
+        pass
 
     async def _send_vote(self):
         """Send a vote to the requesting node."""
         pass
 
-    @app.route("/heartbeat")
+    @app.route("/heartbeat", methods=["POST"])
     async def _receive_heartbeat(self, request: Request): ...
 
     async def _send_heartbeat(self):
         """Send a heartbeat to the requesting node."""
         pass
 
-    @app.route("/append")
+    @app.route("/append", methods=["POST"])
     async def _receive_append(self, request: Request): ...
 
     async def _send_append(self):
