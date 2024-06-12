@@ -1,4 +1,6 @@
-from asyncio import asyncio
+import asyncio
+
+
 class NodeTimer:
     def __init__(self, duration: int):
         self.duration = duration
@@ -13,7 +15,7 @@ class NodeTimer:
         Start the timer.
         """
         self._task = asyncio.create_task(self._run())
-    
+
     async def reset(self):
         """
         Reset the timer.
@@ -30,6 +32,7 @@ class NodeTimer:
             self._task.cancel()
             self._task = None
 
+
 class NodeTimers:
     """
     Attributes:
@@ -38,8 +41,8 @@ class NodeTimers:
     """
 
     def __init__(self, election_timer: int = 0, heartbeat_timer: int = 0):
-        self.election_timer = election_timer
-        self.heartbeat_timer = heartbeat_timer
+        self.election_timer = NodeTimer(election_timer)
+        self.heartbeat_timer = NodeTimer(heartbeat_timer)
 
     async def reset_election_timer(self):
         await self.election_timer.reset()
@@ -52,4 +55,3 @@ class NodeTimers:
 
     async def start_heartbeat_timer(self):
         await self.heartbeat_timer.start()
-
