@@ -73,7 +73,8 @@ class Node:
     @app.route("/vote", methods=["POST"])
     async def _receive_vote(self, request: Request):
         """Receive a vote from a requesting node."""
-        pass
+        request = await request.json()
+        asyncio.create_task(self.add_action(self.receive_vote(request.vote)))
 
     async def _send_vote(self, vote: bool):
         """Send a vote to the requesting node."""
