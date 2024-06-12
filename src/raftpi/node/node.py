@@ -14,6 +14,7 @@ import logging
 import uvicorn
 from threading import Thread
 import actions
+from config import DEFAULT_TIMER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,10 @@ class Node:
         self.neighbors = neighbors
         self.actionQueue = Queue()
         self.timers = NodeTimers(
-            5, 5, actions.receive_candidate_timeout, actions.receive_heartbeat_timeout
+            DEFAULT_TIMER,
+            DEFAULT_TIMER,
+            actions.receive_candidate_timeout(self),
+            actions.receive_heartbeat_timeout(self),
         )
         self._start_task = None
 
