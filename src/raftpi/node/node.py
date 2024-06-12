@@ -1,6 +1,6 @@
 import aiohttp
 from queue import Queue
-from fastapi import Request
+from .api import API
 import contextlib
 import threading
 import socket
@@ -13,9 +13,7 @@ from fastapi import FastAPI
 import logging
 import uvicorn
 from threading import Thread
-from actions import receive_heartbeat_timeout, receive_candidate_timeout
-
-app = FastAPI()
+import actions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +43,19 @@ class Node:
         self.state = state
         self.neighbors = neighbors
         self.actionQueue = Queue()
-        self.timers = NodeTimers(5, 5, receive_candidate_timeout, receive_heartbeat_timeout)
+        self.timers = NodeTimers(
+            5, 5, actions.receive_candidate_timeout, actions.receive_heartbeat_timeout
+        )
         self._start_task = None
+
+    def _setup_api(self):
+        """Setup the API with the receivers and sender utilities."""
+        self.api = API(
+            self._receive_vote_handler,
+            self._receive_heartbeat_handler,
+            self._receive_append_handler,
+        )
+        self.api.run()
 
     async def start(self):
         """Start the node processes."""
@@ -75,11 +84,9 @@ class Node:
                     response = await response.json()
                     _LOGGER.debug(response)
 
-    @app.route("/vote", methods=["POST"])
-    async def _receive_vote(self, request: Request):
+    async def _receive_vote_handler(self, vote: bool):
         """Receive a vote from a requesting node."""
-        request = await request.json()
-        asyncio.create_task(self.add_action(self.receive_vote(request.vote)))
+        self.add_action(actions.receive_vote(vote))
 
     async def _send_vote(self, vote: bool):
         """Send a vote to the requesting node."""
@@ -88,8 +95,8 @@ class Node:
         else:
             raise Node.WrongStateException("Node is not a follower")
 
-    @app.route("/heartbeat", methods=["POST"])
-    async def _receive_heartbeat(self, request: Request): ...
+    async def _receive_heartbeat_handler(self, data: dict):
+        pass
 
     async def _send_heartbeat(self):
         """Send a heartbeat to the requesting node."""
@@ -98,15 +105,14 @@ class Node:
         else:
             raise Node.WrongStateException("Node is not a leader")
 
-    @app.route("/append", methods=["POST"])
-    async def _receive_append(self, request: Request):
+    async def _receive_append_handler(self, data: object):
         pass
 
     async def _send_append(self):
         """Send an append to the requesting node."""
         await self._post_neighbors("append")
 
-    async def add_action(self, action: Coroutine):
+    def add_action(self, action: Coroutine):
         """Add an action to the action queue."""
         self.actionQueue.put(action)
         _LOGGER.debug("Node action completed")

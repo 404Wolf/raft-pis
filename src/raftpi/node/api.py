@@ -38,7 +38,7 @@ class API:
     @app.route("/vote", methods=["POST"])
     async def _receive_vote(self, request: Request):
         """Receive a vote from a requesting node."""
-        await self.receive_vote_callback(await request.json())
+        await self.receive_vote_callback((await request.json()).vote)
 
     async def _send_vote(self, ip: str, vote: bool):
         """Send a vote to the requesting node."""
@@ -47,7 +47,7 @@ class API:
     @app.route("/heartbeat", methods=["POST"])
     async def _receive_heartbeat(self, request: Request):
         """Receive a heartbeat from a requesting node."""
-        await self.receive_heartbeat_callback(await request.json())
+        await self.receive_heartbeat_callback()
 
     async def _send_heartbeat(self, ip: str):
         """Send a heartbeat to the requesting node."""
@@ -56,7 +56,7 @@ class API:
     @app.route("/append", methods=["POST"])
     async def _receive_append(self, request: Request):
         """Receive an append from a requesting node."""
-        await self.receive_append_callback(await request.json())
+        await self.receive_append_callback((await request.json()).data)
 
     async def _send_append(self, ip: str, data: object):
         await self.send(ip, "append", data=data)
