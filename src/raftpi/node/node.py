@@ -3,6 +3,8 @@ from queue import Queue
 import socket
 from enum import Enum
 from .timer import NodeTimers
+from asyncio import asyncio
+from types import coroutine, Queue as QueueType
 
 class NodeState(Enum):
     FOLLOWER = 1
@@ -24,10 +26,17 @@ class Node:
         self.actionQueue = Queue()
         self.timers = NodeTimers()
 
-    async def run(self):
+    async def _start(self):
+        if self._task is None:
+            self._task = asyncio.create_task(self._run())
+
+    async def _run(self):
         while True:
-            action = self.actionQueue.get()
-            await action(self)
+            await (await self.actionQueue.get())(self)
+            await asyncio.sleep(3)
+
+    async def add_action(self, action: coroutine):
+        self.actionQueue.put(action)
 
     @staticmethod
     def _get_ip():
