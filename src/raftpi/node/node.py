@@ -3,11 +3,16 @@ from queue import Queue
 import socket
 from enum import Enum
 from .timer import NodeTimers
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class NodeState(Enum):
     FOLLOWER = 1
     CANDIDATE = 2
     LEADER = 3
+
 
 class Node:
     """
@@ -28,6 +33,7 @@ class Node:
         while True:
             action = self.actionQueue.get()
             await action(self)
+            _LOGGER.debug("Node action completed")
 
     @staticmethod
     def _get_ip():

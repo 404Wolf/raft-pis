@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from dataclasses import field
 from .node import NodeState
 from queue import Queue
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -22,6 +25,8 @@ class Term:
         """
         Get the next term.
         """
+
+        _LOGGER.debug("Next term", self.number + 1)
         return Term(self.number + 1)
 
 
@@ -48,6 +53,7 @@ class NodeLog:
         """
         Initialize the log with a cap on the number of items.
         """
+        _LOGGER.debug("Initializing NodeLog")
         self.max_items = max_items
         self._log = [NodeLogEntry(None, Term(first_term), initial_state)]
 
@@ -56,9 +62,11 @@ class NodeLog:
         Append a value to the log. Timestamp is automatically assigned.
         """
         self._log.append(NodeLogEntry(data, self.get().term.next_term(), state))
+        _LOGGER.debug("Appended to log")
 
     def get(self) -> NodeLogEntry:
         """
         Get the most recent entry.
         """
+        _LOGGER.debug("Getting most recent entry")
         return self._log[-1]

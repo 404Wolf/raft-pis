@@ -10,14 +10,14 @@ packages = [ { include = "raftpi", from = "src" } ]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-cowsay = "^6.1"
-pytest = "^8.2.2"
+click = "^8.1.7"
+flask = "^3.0.3"
 
 [tool.poetry.dev-dependencies]
 black = "^24.00"
 
 [tool.poetry.scripts]
-main = "raftpi.__main__:main"
+raftpi = "raftpi.__main__:raftpi"
 
 [build-system]
 requires = ["poetry-core"]
