@@ -33,8 +33,14 @@ class Node:
         state (NodeState): Current state of the node.
     """
 
-    def __init__(self, neighbors: list[str]):
+    class WrongStateException(Exception):
+        """Raised when the node is in the wrong state for the action."""
+
+        pass
+
+    def __init__(self, neighbors: list[str], state: NodeState = NodeState.FOLLOWER):
         self.IP = self._get_ip()
+        self.state = state
         self.neighbors = neighbors
         self.actionQueue = Queue()
         self.timers = NodeTimers()
@@ -47,6 +53,7 @@ class Node:
             self._start_task = asyncio.create_task(self._begin_actions())
 
     async def _begin_actions(self):
+        """Start the node actions."""
         while True:
             await (await self.actionQueue.get())(self)
             await asyncio.sleep(3)
@@ -54,34 +61,40 @@ class Node:
 
     async def _post_neighbors(self, endpoint: str):
         """Send a request to all neighbors."""
-        async with aiohttp.ClientSession():
+        async with aiohttp.ClientSession() as session:
             for neighbor in self.neighbors:
                 async with session.post(f"http://{neighbor}/{endpoint}") as response:
                     response = await response.json()
                     _LOGGER.debug(response)
 
     @app.route("/vote", methods=["POST"])
-    async def _receive_vote(self, request: Request): 
+    async def _receive_vote(self, request: Request):
         """Receive a vote from a requesting node."""
         pass
 
     async def _send_vote(self):
         """Send a vote to the requesting node."""
-        pass
+        if self.state == NodeState.FOLLOWER:
+            await self._post_neighbors("vote")
+        else:
+            raise Node.WrongStateException("Node is not a follower")
 
     @app.route("/heartbeat", methods=["POST"])
     async def _receive_heartbeat(self, request: Request): ...
 
     async def _send_heartbeat(self):
         """Send a heartbeat to the requesting node."""
-        pass
+        if self.state == NodeState.LEADER:
+            await self._post_neighbors("heartbeat")
+        else:
+            raise Node.WrongStateException("Node is not a leader")
 
     @app.route("/append", methods=["POST"])
     async def _receive_append(self, request: Request): ...
 
     async def _send_append(self):
         """Send an append to the requesting node."""
-        pass
+        await self._post_neighbors("append")
 
     async def add_action(self, action: Coroutine):
         """Add an action to the action queue."""
