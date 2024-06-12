@@ -7,7 +7,6 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-
 class NodeState(Enum):
     FOLLOWER = 1
     CANDIDATE = 2
@@ -29,11 +28,18 @@ class Node:
         self.actionQueue = Queue()
         self.timers = NodeTimers()
 
-    async def run(self):
+    async def _start(self):
+        if self._task is None:
+            self._task = asyncio.create_task(self._run())
+
+    async def _run(self):
         while True:
             action = self.actionQueue.get()
             await action(self)
             _LOGGER.debug("Node action completed")
+
+    async def add_action(self, action: coroutine):
+        self.actionQueue.put(action)
 
     @staticmethod
     def _get_ip():
