@@ -1,5 +1,4 @@
 import aiohttp
-from queue import Queue
 from .api import API
 import contextlib
 import threading
@@ -41,7 +40,7 @@ class Node:
         self.IP = self._get_ip()
         self.state = state
         self.neighbors = neighbors
-        self.actionQueue = Queue()
+        self.actionQueue = asyncio.Queue()
         self.countVotes = dict()
         self.timers = NodeTimers(
             DEFAULT_TIMER,
@@ -64,23 +63,28 @@ class Node:
     async def start(self):
         """Start the node processes."""
         if self._start_task is None:
+            print("setting up api")
             self._setup_api()
 
             # start the heartbeat timer and push the heartbeat timeout to the actions queue
             if self.state == NodeState.FOLLOWER:
-                asyncio.create_task(self.timers.start_heartbeat_timer())
+                # timer = asyncio.create_task(self.timers.start_heartbeat_timer())
+                await self.timers.start_heartbeat_timer()
 
             self._start_task = asyncio.create_task(self._begin_actions())
+            await self._start_task
 
     async def _begin_actions(self):
         """Start the node actions."""
         print("starting action queue runner")
         while True:
             print("Checking queue")
-            action = self.actionQueue.get()
+            action = await self.actionQueue.get()
             print(action)
-            asyncio.create_task(action())
-            await asyncio.sleep(.3)
+            print("got action from queue")
+            # this is not working as expected
+            await action()
+            # await asyncio.sleep(0.5)
             print("Awaited the sleep")
             _LOGGER.debug("Node action completed")
 
@@ -98,10 +102,10 @@ class Node:
         """Receive a vote from a requesting node."""
         async def _wrapped_receive_vote():
             await actions.receive_vote(self, vote)
-        self.add_action(_wrapped_receive_vote)
+        await self.add_action(_wrapped_receive_vote)
     
     async def _receive_start_election_handler(self, data: bool):
-        self.add_actions(actions.receive_start_election(data))
+        await self.add_actions(actions.receive_start_election(data))
 
     async def _send_vote(self, vote: bool):
         """Send a vote to the requesting node."""
@@ -127,9 +131,10 @@ class Node:
         """Send an append to the requesting node."""
         await self._post_neighbors("append")
 
-    def add_action(self, action: Coroutine):
+    async def add_action(self, action: Coroutine):
         """Add an action to the action queue."""
-        self.actionQueue.put(action)
+        print("adding action to queue")
+        await self.actionQueue.put(action)
         _LOGGER.debug("Node action completed")
 
     @staticmethod

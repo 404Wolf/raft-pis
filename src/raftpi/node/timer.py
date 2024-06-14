@@ -13,9 +13,12 @@ class NodeTimer:
         self._task = None
 
     async def _run(self):
-        await asyncio.sleep(self.duration / 1000)
+        print("timer is running")
+        await asyncio.sleep(3)
+        print("done timer")
         if self._callback:
-            await self._callback
+            await self._callback()
+            print("running callback!")
             _LOGGER.debug("Ran the callback")
         else:
             _LOGGER.debug("No callback provided")
@@ -25,7 +28,13 @@ class NodeTimer:
         """
         Start the timer.
         """
-        self._task = asyncio.create_task(self._run())
+        # await the start 
+        await self._run()
+
+
+        # print("starting a timer")
+        # self._task = asyncio.create_task(self._run())
+        # await self._run()
 
     async def reset(self):
         """
@@ -71,4 +80,6 @@ class NodeTimers:
         await self.election_timer.start()
 
     async def start_heartbeat_timer(self):
-        await self.heartbeat_timer.start()
+        print("starting heartbeat timer")
+        self._task = asyncio.create_task(self.heartbeat_timer.start())
+        # await asyncio.sleep(.1)
